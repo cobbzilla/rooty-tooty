@@ -19,8 +19,18 @@ import java.util.*;
 public class RootyConfiguration {
 
     @Getter @Setter private String secret;
+    public RootyConfiguration withSecret(String s) { secret = s; return this; }
+
     @Getter @Setter private String queueName;
+    public RootyConfiguration withQueueName(String q) { queueName = q; return this; }
+
     @Getter @Setter private Map<String, RootyHandlerConfiguration> handlers;
+
+    public RootyConfiguration addHandler (RootyHandlerConfiguration handlerConfig) {
+        if (handlers == null) handlers = new HashMap<>();
+        handlers.put(handlerConfig.getHandler(), handlerConfig);
+        return this;
+    }
 
     @Getter(lazy=true) private final MqClient  mqClient = initMqClient();
 
