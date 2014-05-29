@@ -70,3 +70,6 @@ Ensure your CLASSPATH includes both:
     RootyMain daemon = new RootyMain();
     daemon.run(config); // async: will start a listener thread and return
 
+##### License
+For personal or non-commercial use, this code is available under the [GNU Affero General Public License, version 3](https://www.gnu.org/licenses/agpl-3.0.html).
+For commercial use, please contact cloudstead.io
