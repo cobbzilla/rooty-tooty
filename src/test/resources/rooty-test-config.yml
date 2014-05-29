@@ -1,0 +1,5 @@
+secret: {{SECRET}}
+queueName: {{QUEUE_NAME}}
+
+handlers:
+  rooty.handlers.TouchFileHandler:
