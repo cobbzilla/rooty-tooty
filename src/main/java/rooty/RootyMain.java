@@ -108,7 +108,8 @@ public class RootyMain implements MqConsumer {
             }
             final List<RootyHandler> handlers = configuration.getHandlers(message);
             if (handlers.isEmpty()) {
-                throw new IllegalArgumentException("No handler found for message "+message.getUuid()+" with type=" + message.getClass().getName());
+                log.warn("No handler found for message "+message.getUuid()+" with type=" + message.getClass().getName());
+                return;
             }
             for (RootyHandler handler : handlers) {
                 handler.process(message);
