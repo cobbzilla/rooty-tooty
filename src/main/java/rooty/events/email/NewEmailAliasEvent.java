@@ -11,6 +11,8 @@ public class NewEmailAliasEvent extends EmailAliasEvent {
     @Getter @Setter
     public List<String> recipients = new ArrayList<>();
     public NewEmailAliasEvent withRecipients (List<String> r) { recipients = r; return this; }
-    public NewEmailAliasEvent withRecipient (String r) { recipients.add(r); return this; }
+    public NewEmailAliasEvent withRecipient (String r) { addRecipient(r); return this; }
+
+    public void addRecipient(String name) { recipients.add(name); }
 
 }
