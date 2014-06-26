@@ -4,11 +4,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import org.cobbzilla.util.string.StringUtil;
 
 import java.util.UUID;
 
 @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class")
+@Accessors(chain=true)
 public abstract class RootyMessage {
 
     private static final int MIN_SALT_LENGTH = 20;
@@ -21,6 +23,9 @@ public abstract class RootyMessage {
     @Getter @Setter private String hash;
     @Getter @Setter private int errorCount = 0;
     @Getter @Setter private String lastError;
+    @Getter @Setter private boolean success = false;
+    @Getter @Setter private boolean finished = false;
+    @Getter @Setter private String results = null;
 
     public void setError (String message) {
         lastError = message;

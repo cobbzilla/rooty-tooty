@@ -10,6 +10,9 @@ public interface RootyHandler {
     public String getQueueName();
     void setQueueName(String queueName);
 
+    public RootyStatusManager getStatusManager();
+    void setStatusManager(RootyStatusManager updater);
+
     /**
      * @param message A candidate message
      * @return true if this handler wants to process the message

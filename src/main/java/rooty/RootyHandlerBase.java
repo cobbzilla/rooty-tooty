@@ -8,7 +8,10 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.mq.MqClient;
 import org.cobbzilla.util.mq.MqProducer;
+import org.cobbzilla.util.security.CryptoUtil;
 import org.cobbzilla.util.security.ShaUtil;
+import org.cobbzilla.util.string.Base64;
+import org.cobbzilla.util.string.StringUtil;
 
 @Slf4j
 public abstract class RootyHandlerBase implements RootyHandler {
@@ -21,6 +24,8 @@ public abstract class RootyHandlerBase implements RootyHandler {
 
     @Getter(value=AccessLevel.PROTECTED, lazy=true) private final MqProducer mqProducer = initMqProducer();
     private MqProducer initMqProducer() { return mqClient.getProducer(queueName); }
+
+    @Getter @Setter private RootyStatusManager statusManager;
 
     public void write (RootyMessage message, String secret) {
 
@@ -43,7 +48,7 @@ public abstract class RootyHandlerBase implements RootyHandler {
         }
 
         try {
-            getMqProducer().send(json);
+            getMqProducer().send(Base64.encodeBytes(CryptoUtil.encrypt(json.getBytes(StringUtil.UTF8cs), secret)));
         } catch (Exception e) {
             throw new IllegalStateException("Error writing to message queue: "+e, e);
         }

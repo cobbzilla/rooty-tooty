@@ -4,11 +4,14 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import net.rubyeye.xmemcached.MemcachedClient;
+import net.rubyeye.xmemcached.XMemcachedClient;
 import org.cobbzilla.util.mq.MqClient;
 import org.cobbzilla.util.mq.MqClientFactory;
 import org.cobbzilla.util.mq.kestrel.KestrelClient;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -24,13 +27,10 @@ public class RootyConfiguration {
     @Getter @Setter private String queueName;
     public RootyConfiguration withQueueName(String q) { queueName = q; return this; }
 
-    @Getter @Setter private Map<String, RootyHandlerConfiguration> handlers;
+    @Getter @Setter private String memcachedHost = "127.0.0.1";
+    @Getter @Setter private int memcachedPort = 11211;
 
-    public RootyConfiguration addHandler (RootyHandlerConfiguration handlerConfig) {
-        if (handlers == null) handlers = new HashMap<>();
-        handlers.put(handlerConfig.getHandler(), handlerConfig);
-        return this;
-    }
+    @Getter @Setter private Map<String, RootyHandlerConfiguration> handlers;
 
     @Getter(lazy=true) private final MqClient  mqClient = initMqClient();
 
@@ -54,7 +54,6 @@ public class RootyConfiguration {
     }
 
     @Getter(lazy=true) private final RootySender sender = initSender();
-
     private RootySender initSender() {
         return (RootySender) new RootySender()
                 .withSecret(secret)
@@ -62,9 +61,26 @@ public class RootyConfiguration {
                 .withQueueName(getQueueName());
     }
 
-    public RootyHandler getHandler(Class clazz) {
-        for (RootyHandler handler : getHandlerMap().values()) {
-            if (handler.getClass().isAssignableFrom(clazz)) return handler;
+    @Getter(value=AccessLevel.PROTECTED, lazy=true) private final MemcachedClient memcached = initMemcached();
+    private MemcachedClient initMemcached() {
+        try {
+            return new XMemcachedClient(getMemcachedHost(), getMemcachedPort());
+        } catch (IOException e) {
+            throw new IllegalStateException("Error connecting to memcached: "+e, e);
+        }
+    }
+
+    @Setter private RootyStatusManager statusManager;
+    public RootyStatusManager getStatusManager() {
+        if (statusManager == null) statusManager = new RootyStatusManager(getMemcached(), getSecret());
+        return statusManager;
+    }
+
+    public <T> T getHandler(Class<T> clazz) { return (T) getRootyHandler(clazz, getHandlerMap()); }
+
+    public static RootyHandler getRootyHandler(Class clazz, Map<String, RootyHandler> map) {
+        for (RootyHandler handler : map.values()) {
+            if (clazz.isAssignableFrom(handler.getClass())) return handler;
         }
         return null;
     }
@@ -77,25 +93,42 @@ public class RootyConfiguration {
         return accepted;
     }
 
-    @Getter(value= AccessLevel.PRIVATE, lazy=true) private final Map<String, RootyHandler> handlerMap = initHandlerMap();
+    @Getter(value=AccessLevel.PROTECTED, lazy=true) private final Map<String, RootyHandler> handlerMap = initHandlerMap();
     private Map<String, RootyHandler> initHandlerMap() {
         final Map<String, RootyHandler> map = new HashMap<>();
         for (Map.Entry<String, RootyHandlerConfiguration> entry : getHandlers().entrySet()) {
             final RootyHandlerConfiguration handlerConfig = entry.getValue();
             try {
                 final String name = entry.getKey();
-                final RootyHandler handler = (RootyHandler) Class.forName(name).newInstance();
-                handler.setMqClient(getMqClient());
-                handler.setQueueName(getQueueName());
-                if (handlerConfig != null && handlerConfig.getParams() != null) {
-                    ReflectionUtil.copyFromMap(handler, handlerConfig.getParams());
-                }
-                map.put(name, handler);
+                addHandler(map, name, handlerConfig);
 
             } catch (Exception e) {
                 log.error("Error creating handler ("+handlerConfig+"): "+e, e);
             }
         }
         return map;
+    }
+
+    private void addHandler(Map<String, RootyHandler> map, String handlerClass, RootyHandlerConfiguration config) throws Exception {
+        final RootyHandler handler = (RootyHandler) Class.forName(handlerClass).newInstance();
+        if (config != null && config.getParams() != null) {
+            ReflectionUtil.copyFromMap(handler, config.getParams());
+        }
+        addHandler(map, handlerClass, handler);
+    }
+
+    private void addHandler(Map<String, RootyHandler> map, String handlerClass, RootyHandler handler) {
+        handler.setMqClient(getMqClient());
+        handler.setQueueName(getQueueName());
+        handler.setStatusManager(getStatusManager());
+        map.put(handlerClass, handler);
+    }
+
+    public void addHandler (String handlerClass, RootyHandlerConfiguration config) throws Exception {
+        addHandler(getHandlerMap(), handlerClass, config);
+    }
+
+    public void addHandler (RootyHandler handler) throws Exception {
+        addHandler(getHandlerMap(), handler.getClass().getName(), handler);
     }
 }

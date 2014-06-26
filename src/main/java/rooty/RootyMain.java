@@ -4,10 +4,11 @@ import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.mq.MqClient;
 import org.cobbzilla.util.mq.MqConsumer;
+import org.cobbzilla.util.security.CryptoUtil;
 import org.cobbzilla.util.security.ShaUtil;
+import org.cobbzilla.util.string.Base64;
 import org.kohsuke.args4j.CmdLineParser;
 import org.yaml.snakeyaml.Yaml;
 
@@ -15,6 +16,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.cobbzilla.util.json.JsonUtil.fromJson;
+import static org.cobbzilla.util.string.StringUtil.UTF8cs;
 
 @Slf4j
 public class RootyMain implements MqConsumer {
@@ -101,23 +105,38 @@ public class RootyMain implements MqConsumer {
             throw new IllegalStateException(msg);
         }
 
-        final RootyMessage message = JsonUtil.fromJson(o.toString(), RootyMessage.class);
+        // decrypt/unmarshall the message
+        final byte[] messageBytes = o.toString().getBytes(UTF8cs);
+        final String secret = configuration.getSecret();
+        final String json = new String(CryptoUtil.decrypt(Base64.decode(messageBytes), secret), UTF8cs);
+        final RootyMessage message = fromJson(json, RootyMessage.class);
+
         try {
-            if (!ShaUtil.sha256_hex(message.getSalt()+configuration.getSecret()).equals(message.getHash())) {
+            // verify hash
+            if (!ShaUtil.sha256_hex(message.getSalt()+ secret).equals(message.getHash())) {
                 throw new IllegalArgumentException("Invalid hash for message: " + message.getUuid());
             }
+
+            // which handlers will take this message?
             final List<RootyHandler> handlers = configuration.getHandlers(message);
             if (handlers.isEmpty()) {
                 log.warn("No handler found for message "+message.getUuid()+" with type=" + message.getClass().getName());
                 return;
             }
+
+            // Process the message
             for (RootyHandler handler : handlers) {
                 handler.process(message);
             }
+            message.setSuccess(true);
 
         } catch (Exception e) {
             message.setError(e.getMessage());
             throw e;
+
+        } finally {
+            // write finalized result to memcached
+            configuration.getStatusManager().update(message.setFinished(true));
         }
     }
 }
