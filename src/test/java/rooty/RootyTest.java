@@ -5,13 +5,16 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.io.StreamUtil;
+import org.cobbzilla.util.json.JsonUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import rooty.handlers.TouchFileHandler;
 import rooty.handlers.TouchMessage;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -69,10 +72,29 @@ public class RootyTest {
         log.info("writing to MQ");
         TouchFileHandler.resetStats();
         new TouchFileHandler()
-                .withMqClient(main.getMqClient())
-                .withQueueName(queueName)
+                .setMqClient(main.getMqClient())
+                .setQueueName(queueName)
                 .write(message, secret);
         log.info("wrote to MQ: "+message);
+
+        expectFileTouched(targetFile);
+    }
+
+    @Test
+    public void testSender () throws Exception {
+
+        final File targetFile = new File(System.getProperty("java.io.tmpdir"), RandomStringUtils.randomAlphanumeric(10));
+        final TouchMessage message = new TouchMessage(targetFile.getAbsolutePath());
+
+        final RootySenderMain sender = new RootySenderMain();
+        final String[] args = { configFile.getAbsolutePath() };
+        final InputStream in = new ByteArrayInputStream(JsonUtil.toJson(message).getBytes());
+        sender.send(args, in);
+
+        expectFileTouched(targetFile);
+    }
+
+    public void expectFileTouched(File targetFile) throws InterruptedException {
 
         // wait for file to be touched
         long start = System.currentTimeMillis();
@@ -84,5 +106,4 @@ public class RootyTest {
         assertEquals(1, TouchFileHandler.getMessageCount());
         assertEquals(1, TouchFileHandler.getSuccessCount());
     }
-
 }

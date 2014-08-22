@@ -5,13 +5,13 @@ import org.cobbzilla.util.mq.MqClient;
 public interface RootyHandler {
 
     public MqClient getMqClient();
-    public void setMqClient(MqClient mqClient);
+    public RootyHandler setMqClient(MqClient mqClient);
 
     public String getQueueName();
-    void setQueueName(String queueName);
+    public RootyHandler setQueueName(String queueName);
 
     public RootyStatusManager getStatusManager();
-    void setStatusManager(RootyStatusManager updater);
+    public RootyHandler setStatusManager(RootyStatusManager updater);
 
     /**
      * @param message A candidate message

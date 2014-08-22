@@ -3,6 +3,7 @@ package rooty;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.RandomStringUtils;
 import org.cobbzilla.util.json.JsonUtil;
@@ -13,14 +14,11 @@ import org.cobbzilla.util.security.ShaUtil;
 import org.cobbzilla.util.string.Base64;
 import org.cobbzilla.util.string.StringUtil;
 
-@Slf4j
+@Accessors(chain=true) @Slf4j
 public abstract class RootyHandlerBase implements RootyHandler {
 
     @Getter @Setter protected MqClient mqClient;
-    public RootyHandlerBase withMqClient(MqClient m) { mqClient = m; return this; }
-
     @Getter @Setter protected String queueName;
-    public RootyHandlerBase withQueueName(String n) { queueName = n; return this; }
 
     @Getter(value=AccessLevel.PROTECTED, lazy=true) private final MqProducer mqProducer = initMqProducer();
     private MqProducer initMqProducer() { return mqClient.getProducer(queueName); }

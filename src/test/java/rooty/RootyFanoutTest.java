@@ -79,8 +79,8 @@ public class RootyFanoutTest {
         log.info("writing to parent queue");
         TouchFileHandler.resetStats();
         new TouchFileHandler()
-                .withMqClient(consumers[0].getMqClient())
-                .withQueueName(queueName) // write to parent queue
+                .setMqClient(consumers[0].getMqClient())
+                .setQueueName(queueName) // write to parent queue
                 .write(message, secret);
         log.info("wrote to parent queue: "+message);
 

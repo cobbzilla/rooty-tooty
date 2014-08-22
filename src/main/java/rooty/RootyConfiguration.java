@@ -3,6 +3,7 @@ package rooty;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import net.rubyeye.xmemcached.MemcachedClient;
 import net.rubyeye.xmemcached.XMemcachedClient;
@@ -18,15 +19,11 @@ import java.util.*;
  * The rooty configuration file is stored somewhere as a YAML document.
  * The YAML gets mapped into this object.
  */
-@Slf4j
+@Accessors(chain=true) @Slf4j
 public class RootyConfiguration {
 
     @Getter @Setter private String secret;
-    public RootyConfiguration withSecret(String s) { secret = s; return this; }
-
     @Getter @Setter private String queueName;
-    public RootyConfiguration withQueueName(String q) { queueName = q; return this; }
-
     @Getter @Setter private String memcachedHost = "127.0.0.1";
     @Getter @Setter private int memcachedPort = 11211;
 
@@ -56,9 +53,9 @@ public class RootyConfiguration {
     @Getter(lazy=true) private final RootySender sender = initSender();
     private RootySender initSender() {
         return (RootySender) new RootySender()
-                .withSecret(secret)
-                .withMqClient(getMqClient())
-                .withQueueName(getQueueName());
+                .setSecret(secret)
+                .setMqClient(getMqClient())
+                .setQueueName(getQueueName());
     }
 
     @Getter(value=AccessLevel.PROTECTED, lazy=true) private final MemcachedClient memcached = initMemcached();
