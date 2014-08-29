@@ -3,12 +3,11 @@ package rooty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import lombok.experimental.Accessors;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Accessors(chain=true) @ToString
+@ToString
 public class RootyHandlerConfiguration {
 
     @Getter @Setter private String handler;

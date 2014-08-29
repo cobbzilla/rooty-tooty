@@ -3,7 +3,6 @@ package rooty;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import net.rubyeye.xmemcached.MemcachedClient;
 import net.rubyeye.xmemcached.XMemcachedClient;
@@ -19,7 +18,7 @@ import java.util.*;
  * The rooty configuration file is stored somewhere as a YAML document.
  * The YAML gets mapped into this object.
  */
-@Accessors(chain=true) @Slf4j
+@Slf4j
 public class RootyConfiguration {
 
     @Getter @Setter private String secret;
