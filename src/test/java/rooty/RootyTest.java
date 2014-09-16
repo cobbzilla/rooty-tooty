@@ -52,6 +52,8 @@ public class RootyTest {
         final String[] args = { configFile.getAbsolutePath() };
         main.run(args);
         assertTrue(main.waitForStartup(10000));
+
+        TouchFileHandler.resetStats();
     }
 
     @After
