@@ -2,7 +2,7 @@ package rooty;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.io.StreamUtil;
 import org.junit.After;

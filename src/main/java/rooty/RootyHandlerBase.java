@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.mq.MqClient;
 import org.cobbzilla.util.mq.MqProducer;
