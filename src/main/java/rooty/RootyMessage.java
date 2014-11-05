@@ -19,13 +19,15 @@ public abstract class RootyMessage {
     public boolean hasUuid() { return !StringUtil.empty(uuid); }
     public void initUuid () { this.uuid = UUID.randomUUID().toString(); }
 
+    @Getter @Setter private long ctime = System.currentTimeMillis();
     @Getter @Setter private String salt;
     @Getter @Setter private String hash;
     @Getter @Setter private int errorCount = 0;
     @Getter @Setter private String lastError;
     @Getter @Setter private boolean success = false;
     @Getter @Setter private boolean finished = false;
-    @Getter @Setter private String results = null;
+    @Getter private String results = null;
+    public RootyMessage setResults (String r) { results = (r == null) ? null : r.trim(); return this; }
 
     public void setError (String message) {
         lastError = message;
@@ -35,5 +37,8 @@ public abstract class RootyMessage {
     @JsonIgnore public boolean isValid () {
         return !StringUtil.empty(uuid) && (salt != null && salt.length() > MIN_SALT_LENGTH) && !StringUtil.empty(hash);
     }
+
+    @JsonIgnore public long getAge () { return System.currentTimeMillis() - ctime; }
+    public boolean isOlderThan (long age) { return System.currentTimeMillis() - ctime > age; }
 
 }

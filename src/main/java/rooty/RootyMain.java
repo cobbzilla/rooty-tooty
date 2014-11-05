@@ -92,8 +92,13 @@ public class RootyMain implements MqConsumer {
 
     public void run () {
         final String queueName = configuration.getQueueName();
-        getMqClient().registerConsumer(this, queueName, queueName + "_error");
+        configuration.initHandlers();
+        getMqClient().registerConsumer(this, queueName, getErrorQueueName(queueName));
         listening.set(true);
+    }
+
+    private String getErrorQueueName(String queueName) {
+        return queueName.contains("+") ? queueName.replace("+", "_error+") : queueName + "_error";
     }
 
     @Override
@@ -109,7 +114,20 @@ public class RootyMain implements MqConsumer {
         final byte[] messageBytes = o.toString().getBytes(UTF8cs);
         final String secret = configuration.getSecret();
         final String json = new String(CryptoUtil.decrypt(Base64.decode(messageBytes), secret), UTF8cs);
-        final RootyMessage message = fromJson(json, RootyMessage.class);
+        RootyMessage message = fromJson(json, RootyMessage.class);
+
+        final RootyStatusManager statusManager = configuration.getStatusManager();
+        final RootyMessage storedMessage = statusManager.getStatus(message.getUuid());
+        if (storedMessage != null) message = storedMessage;
+
+        if (message.isSuccess()) {
+            log.info("onMessage: already completed successfully: " + message);
+            return;
+        }
+        if (message.getErrorCount() > configuration.getMaxRetries()) {
+            log.info("onMessage: exceeded max retries, dropping: " + message);
+            return;
+        }
 
         try {
             // verify hash
@@ -136,7 +154,7 @@ public class RootyMain implements MqConsumer {
 
         } finally {
             // write finalized result to memcached
-            configuration.getStatusManager().update(message.setFinished(true));
+            statusManager.update(message.setFinished(true));
         }
     }
 }

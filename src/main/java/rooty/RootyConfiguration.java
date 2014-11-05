@@ -6,13 +6,22 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.rubyeye.xmemcached.MemcachedClient;
 import net.rubyeye.xmemcached.XMemcachedClient;
+import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.mq.MqClient;
 import org.cobbzilla.util.mq.MqClientFactory;
 import org.cobbzilla.util.mq.kestrel.KestrelClient;
 import org.cobbzilla.util.reflect.ReflectionUtil;
+import org.yaml.snakeyaml.Yaml;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static org.cobbzilla.util.io.FileUtil.path;
 
 /**
  * The rooty configuration file is stored somewhere as a YAML document.
@@ -25,10 +34,17 @@ public class RootyConfiguration {
     @Getter @Setter private String queueName;
     @Getter @Setter private String memcachedHost = "127.0.0.1";
     @Getter @Setter private int memcachedPort = 11211;
+    @Getter @Setter private int maxRetries = 0;
+    @Getter @Setter private String configDir;  // more RootyHandlers can be defined in this directory
 
     @Getter @Setter private Map<String, RootyHandlerConfiguration> handlers;
 
     @Getter(lazy=true) private final MqClient  mqClient = initMqClient();
+
+    // force initialization of handlers, will start handlerWatcher
+    public void initHandlers () { getHandlerMap(); }
+
+    private RootyHandlerWatcher handlerWatcher = null;
 
     private MqClient initMqClient() {
         // Setup configuration
@@ -82,7 +98,7 @@ public class RootyConfiguration {
     }
 
     public List<RootyHandler> getHandlers(RootyMessage message) {
-        List<RootyHandler> accepted = new ArrayList<>();
+        final List<RootyHandler> accepted = new ArrayList<>();
         for (RootyHandler handler : getHandlerMap().values()) {
             if (handler.accepts(message)) accepted.add(handler);
         }
@@ -91,7 +107,9 @@ public class RootyConfiguration {
 
     @Getter(value=AccessLevel.PROTECTED, lazy=true) private final Map<String, RootyHandler> handlerMap = initHandlerMap();
     private Map<String, RootyHandler> initHandlerMap() {
-        final Map<String, RootyHandler> map = new HashMap<>();
+        final Map<String, RootyHandler> map = new ConcurrentHashMap<>();
+
+        // Load pre-configured handlers
         for (Map.Entry<String, RootyHandlerConfiguration> entry : getHandlers().entrySet()) {
             final RootyHandlerConfiguration handlerConfig = entry.getValue();
             try {
@@ -99,25 +117,70 @@ public class RootyConfiguration {
                 addHandler(map, name, handlerConfig);
 
             } catch (Exception e) {
-                log.error("Error creating handler ("+handlerConfig+"): "+e, e);
+                log.error("initHandlerMap: Error creating handler ("+handlerConfig+"): "+e, e);
             }
+        }
+
+        // If configDir is defined, load handlers from there
+        // Look files whose names are Java classes that implement RootyHandler
+        if (configDir != null) {
+            final File config = new File(configDir);
+            if (!config.exists() || !config.isDirectory()) {
+                log.warn("initHandlerMap: Not a directory: " + config.getAbsolutePath());
+            } else {
+                final File[] files = config.listFiles();
+                if (files == null) {
+                    log.warn("initHandlerMap: Error listing config dir: " + config.getAbsolutePath());
+                } else {
+                    for (File f : files) {
+                        addHandlerFromFile(map, f);
+                    }
+                }
+            }
+
+            handlerWatcher = new RootyHandlerWatcher(path(config), this);
+            handlerWatcher.start();
         }
         return map;
     }
 
+    protected void addHandlerFromFile(File f) { addHandlerFromFile(getHandlerMap(), f); }
+
+    private void addHandlerFromFile(Map<String, RootyHandler> map, File f) {
+        final String fname = f.getName();
+        if (fname.endsWith("~") || fname.startsWith("#") || fname.startsWith(".")) {
+            log.info("addHandlerFromFile: skipping file: "+fname);
+            return;
+        }
+
+        final RootyHandlerConfiguration handlerConfig;
+        try {
+            handlerConfig = new Yaml().loadAs(FileUtil.toString(f), RootyHandlerConfiguration.class);
+            addHandler(map, fname, handlerConfig.getHandler(), handlerConfig);
+            log.info("addHandlerFromFile: successfully added handler "+fname+" of type: "+handlerConfig.getHandler());
+
+        } catch (Exception e) {
+            log.warn("addHandlerFromFile: Invalid handler config: " + fname + ": " + e);
+        }
+    }
+
     private void addHandler(Map<String, RootyHandler> map, String handlerClass, RootyHandlerConfiguration config) throws Exception {
+        addHandler(map, handlerClass, handlerClass, config);
+    }
+
+    private void addHandler(Map<String, RootyHandler> map, String handlerName, String handlerClass, RootyHandlerConfiguration config) throws Exception {
         final RootyHandler handler = (RootyHandler) Class.forName(handlerClass).newInstance();
         if (config != null && config.getParams() != null) {
             ReflectionUtil.copyFromMap(handler, config.getParams());
         }
-        addHandler(map, handlerClass, handler);
+        addHandler(map, handlerName, handler);
     }
 
-    private void addHandler(Map<String, RootyHandler> map, String handlerClass, RootyHandler handler) {
+    private void addHandler(Map<String, RootyHandler> map, String handlerName, RootyHandler handler) {
         handler.setMqClient(getMqClient());
         handler.setQueueName(getQueueName());
         handler.setStatusManager(getStatusManager());
-        map.put(handlerClass, handler);
+        map.put(handlerName, handler);
     }
 
     public void addHandler (String handlerClass, RootyHandlerConfiguration config) throws Exception {
@@ -127,4 +190,10 @@ public class RootyConfiguration {
     public void addHandler (RootyHandler handler) throws Exception {
         addHandler(getHandlerMap(), handler.getClass().getName(), handler);
     }
+
+    protected void removeHandlerFromFile(File f) {
+        log.info("removeHandlerFromFile: removing handler "+f.getName());
+        getHandlerMap().remove(f.getName());
+    }
+
 }
