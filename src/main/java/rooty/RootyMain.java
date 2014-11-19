@@ -120,8 +120,8 @@ public class RootyMain implements MqConsumer {
         final RootyMessage storedMessage = statusManager.getStatus(message.getUuid());
         if (storedMessage != null) message = storedMessage;
 
-        if (message.isSuccess()) {
-            log.info("onMessage: already completed successfully: " + message);
+        if (!message.isBroadcast() && message.isSuccess()) {
+            log.info("onMessage: non-broadcast already completed successfully, not resending: " + message);
             return;
         }
         if (message.getErrorCount() > configuration.getMaxRetries()) {

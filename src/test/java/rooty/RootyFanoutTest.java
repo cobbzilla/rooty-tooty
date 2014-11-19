@@ -1,5 +1,6 @@
 package rooty;
 
+import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -72,8 +73,9 @@ public class RootyFanoutTest {
     public void testFanout () throws Exception {
 
         // create a request
-        final File targetFile = new File(System.getProperty("java.io.tmpdir"), RandomStringUtils.randomAlphanumeric(10));
+        @Cleanup("delete") final File targetFile = File.createTempFile("testFanout", ".test");
         final TouchMessage message = new TouchMessage(targetFile.getAbsolutePath());
+        message.setBroadcast(true); // send to multiple recipients
 
         // write request to requests dir
         log.info("writing to parent queue");
@@ -85,7 +87,7 @@ public class RootyFanoutTest {
         log.info("wrote to parent queue: "+message);
 
         for (int i=0; i<NUM_CONSUMERS; i++) {
-            final TouchFileHandler handler = (TouchFileHandler) consumers[i].getConfiguration().getHandler(TouchFileHandler.class);
+            final TouchFileHandler handler = consumers[i].getConfiguration().getHandler(TouchFileHandler.class);
 
             final File touched = new File(targetFile.getAbsolutePath()+ handler.getFileSuffix());
 

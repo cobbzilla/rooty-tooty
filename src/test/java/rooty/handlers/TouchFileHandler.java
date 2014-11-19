@@ -2,6 +2,7 @@ package rooty.handlers;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.string.StringUtil;
 import rooty.RootyHandlerBase;
@@ -10,6 +11,7 @@ import rooty.RootyMessage;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 public class TouchFileHandler extends RootyHandlerBase {
 
     private static final AtomicInteger messageCount = new AtomicInteger(0);
@@ -31,6 +33,7 @@ public class TouchFileHandler extends RootyHandlerBase {
 
     @Override public void process(RootyMessage message) {
 
+        log.info("process("+suffix+"): received message: "+message);
         messageCount.incrementAndGet();
 
         final TouchMessage m = (TouchMessage) message;
@@ -38,6 +41,7 @@ public class TouchFileHandler extends RootyHandlerBase {
         FileUtil.touch(file);
 
         if (file.exists()) successCount.incrementAndGet();
+        log.info("process("+suffix+"): successfully touched file: "+file.getAbsolutePath());
     }
 
 }
