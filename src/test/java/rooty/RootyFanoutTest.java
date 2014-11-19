@@ -75,7 +75,6 @@ public class RootyFanoutTest {
         // create a request
         @Cleanup("delete") final File targetFile = File.createTempFile("testFanout", ".test");
         final TouchMessage message = new TouchMessage(targetFile.getAbsolutePath());
-        message.setBroadcast(true); // send to multiple recipients
 
         // write request to requests dir
         log.info("writing to parent queue");

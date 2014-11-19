@@ -117,11 +117,12 @@ public class RootyMain implements MqConsumer {
         RootyMessage message = fromJson(json, RootyMessage.class);
 
         final RootyStatusManager statusManager = configuration.getStatusManager();
-        final RootyMessage storedMessage = statusManager.getStatus(message.getUuid());
+        final String queueName = configuration.getQueueName();
+        final RootyMessage storedMessage = statusManager.getStatus(queueName, message.getUuid());
         if (storedMessage != null) message = storedMessage;
 
-        if (!message.isBroadcast() && message.isSuccess()) {
-            log.info("onMessage: non-broadcast already completed successfully, not resending: " + message);
+        if (message.isSuccess()) {
+            log.info("onMessage: already completed successfully, not resending: " + message);
             return;
         }
         if (message.getErrorCount() > configuration.getMaxRetries()) {
@@ -138,13 +139,12 @@ public class RootyMain implements MqConsumer {
             // which handlers will take this message?
             final List<RootyHandler> handlers = configuration.getHandlers(message);
             if (handlers.isEmpty()) {
-                log.warn("No handler found for message "+message.getUuid()+" with type=" + message.getClass().getName());
-                return;
-            }
-
-            // Process the message
-            for (RootyHandler handler : handlers) {
-                handler.process(message);
+                log.warn("Dropping message "+message.getUuid()+", no handlers found for type=" + message.getClass().getName());
+            } else {
+                // Process the message
+                for (RootyHandler handler : handlers) {
+                    handler.process(message);
+                }
             }
             message.setSuccess(true);
 
@@ -154,7 +154,7 @@ public class RootyMain implements MqConsumer {
 
         } finally {
             // write finalized result to memcached
-            statusManager.update(message.setFinished(true));
+            statusManager.update(queueName, message.setFinished(true));
         }
     }
 }

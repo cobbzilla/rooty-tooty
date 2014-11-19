@@ -17,18 +17,22 @@ public class RootyStatusManager {
     private MemcachedClient memcached;
     private String secret;
 
-    public void update(RootyMessage message) {
+    public static String statusKey(String queueName, String uuid) { return uuid +"_"+queueName; }
+
+    public void update(String queueName, RootyMessage message) {
         try {
             final byte[] encrypted = CryptoUtil.encrypt(toJson(message).getBytes(UTF8cs), secret);
-            memcached.set(message.getUuid(), (int) TimeUnit.MINUTES.toSeconds(5), encrypted);
+            memcached.set(statusKey(queueName, message.getUuid()), (int) TimeUnit.MINUTES.toSeconds(5), encrypted);
+            memcached.set(statusKey("", message.getUuid()), (int) TimeUnit.MINUTES.toSeconds(5), encrypted);
         } catch (Exception e) {
             throw new IllegalStateException("Error updating status: "+e);
         }
     }
 
-    public RootyMessage getStatus (String uuid) {
+    public RootyMessage getStatus (String queueName, String uuid) {
         try {
-            final byte[] encrypted = memcached.get(uuid);
+            byte[] encrypted = memcached.get(statusKey(queueName, uuid));
+            if (encrypted == null) encrypted = memcached.get(statusKey("", uuid));
             return encrypted == null ? null : JsonUtil.fromJson(new String(CryptoUtil.decrypt(encrypted, secret), UTF8cs), RootyMessage.class);
 
         } catch (Exception e) {

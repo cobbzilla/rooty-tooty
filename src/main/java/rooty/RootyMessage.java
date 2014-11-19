@@ -24,7 +24,6 @@ public abstract class RootyMessage {
     @Getter @Setter private String hash;
     @Getter @Setter private int errorCount = 0;
     @Getter @Setter private String lastError;
-    @Getter @Setter private boolean broadcast = false;
     @Getter @Setter private boolean success = false;
     @Getter @Setter private boolean finished = false;
     @Getter private String results = null;
