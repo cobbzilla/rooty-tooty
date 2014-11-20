@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.util.json.JsonUtil.toJson;
 import static org.cobbzilla.util.string.StringUtil.UTF8cs;
+import static org.cobbzilla.util.string.StringUtil.empty;
 
 @AllArgsConstructor @Slf4j
 public class RootyStatusManager {
@@ -29,10 +30,12 @@ public class RootyStatusManager {
         }
     }
 
+    public RootyMessage getStatus (String uuid) { return getStatus("", uuid); }
+
     public RootyMessage getStatus (String queueName, String uuid) {
         try {
             byte[] encrypted = memcached.get(statusKey(queueName, uuid));
-            if (encrypted == null) encrypted = memcached.get(statusKey("", uuid));
+            if (encrypted == null && !empty(queueName)) encrypted = memcached.get(statusKey("", uuid));
             return encrypted == null ? null : JsonUtil.fromJson(new String(CryptoUtil.decrypt(encrypted, secret), UTF8cs), RootyMessage.class);
 
         } catch (Exception e) {
