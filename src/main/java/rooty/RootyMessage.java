@@ -17,7 +17,7 @@ public abstract class RootyMessage {
 
     @Getter @Setter private String uuid;
     public boolean hasUuid() { return !StringUtil.empty(uuid); }
-    public void initUuid () { this.uuid = UUID.randomUUID().toString(); }
+    public String initUuid () { this.uuid = UUID.randomUUID().toString(); return this.uuid; }
 
     @Getter @Setter private long ctime = System.currentTimeMillis();
     @Getter @Setter private String salt;
