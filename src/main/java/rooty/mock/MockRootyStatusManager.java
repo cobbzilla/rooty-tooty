@@ -14,15 +14,15 @@ public class MockRootyStatusManager extends RootyStatusManager {
 
     private Map<String, RootyMessage> map = new HashMap<>();
 
-    @Override public void update(String queueName, RootyMessage message) {
+    @Override public void update(String queueName, RootyMessage message, boolean authoritative) {
         if (!empty(queueName)) map.put(statusKey(queueName, message.getUuid()), message);
-        map.put(statusKey("", message.getUuid()), message);
+        map.put(statusKey(AUTHORITATIVE, message.getUuid()), message);
     }
 
     @Override public RootyMessage getStatus(String queueName, String uuid) {
         RootyMessage message = null;
         if (!empty(queueName)) message = map.get(statusKey(queueName, uuid));
-        return (message != null) ? message : map.get(statusKey("", uuid));
+        return (message != null) ? message : map.get(statusKey(AUTHORITATIVE, uuid));
     }
 
 }

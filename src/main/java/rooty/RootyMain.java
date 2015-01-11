@@ -130,6 +130,7 @@ public class RootyMain implements MqConsumer {
             return;
         }
 
+        boolean authoritative = false;
         try {
             // verify hash
             if (!ShaUtil.sha256_hex(message.getSalt()+ secret).equals(message.getHash())) {
@@ -143,7 +144,7 @@ public class RootyMain implements MqConsumer {
             } else {
                 // Process the message
                 for (RootyHandler handler : handlers) {
-                    handler.process(message);
+                    authoritative = authoritative || handler.process(message);
                 }
             }
             message.setSuccess(true);
@@ -154,7 +155,7 @@ public class RootyMain implements MqConsumer {
 
         } finally {
             // write finalized result to memcached
-            statusManager.update(queueName, message.setFinished(true));
+            statusManager.update(queueName, message.setFinished(true), authoritative);
         }
     }
 }

@@ -22,7 +22,8 @@ public interface RootyHandler {
     /**
      * Process a message
      * @param message The message to process
+     * @return true if the message was processed successfully by the authoritative processor
      */
-    public void process (RootyMessage message);
+    public boolean process (RootyMessage message);
 
 }

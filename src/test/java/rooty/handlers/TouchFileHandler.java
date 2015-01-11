@@ -31,7 +31,7 @@ public class TouchFileHandler extends RootyHandlerBase {
 
     @Override public boolean accepts(RootyMessage message) { return message instanceof TouchMessage; }
 
-    @Override public void process(RootyMessage message) {
+    @Override public boolean process(RootyMessage message) {
 
         log.info("process("+suffix+"): received message: "+message);
         messageCount.incrementAndGet();
@@ -42,6 +42,7 @@ public class TouchFileHandler extends RootyHandlerBase {
 
         if (file.exists()) successCount.incrementAndGet();
         log.info("process("+suffix+"): successfully touched file: "+file.getAbsolutePath());
+        return true;
     }
 
 }

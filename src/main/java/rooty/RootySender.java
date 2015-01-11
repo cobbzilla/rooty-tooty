@@ -8,7 +8,7 @@ public class RootySender extends RootyHandlerBase {
 
     @Override public boolean accepts(RootyMessage message) { return false; }
 
-    @Override public void process(RootyMessage message) {
+    @Override public boolean process(RootyMessage message) {
         throw new IllegalStateException("RootySender is only for sending messages, not receiving");
     }
 
