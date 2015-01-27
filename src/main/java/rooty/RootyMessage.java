@@ -34,6 +34,8 @@ public abstract class RootyMessage {
         errorCount++;
     }
 
+    @JsonIgnore public boolean getBooleanResult () { return Boolean.parseBoolean(results); }
+
     @JsonIgnore public boolean isValid () {
         return !StringUtil.empty(uuid) && (salt != null && salt.length() > MIN_SALT_LENGTH) && !StringUtil.empty(hash);
     }
