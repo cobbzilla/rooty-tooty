@@ -4,17 +4,15 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import net.rubyeye.xmemcached.MemcachedClient;
-import net.rubyeye.xmemcached.XMemcachedClient;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.mq.MqClient;
 import org.cobbzilla.util.mq.MqClientFactory;
 import org.cobbzilla.util.mq.kestrel.KestrelClient;
 import org.cobbzilla.util.reflect.ReflectionUtil;
+import org.cobbzilla.wizard.cache.memcached.MemcachedService;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,12 +32,13 @@ public class RootyConfiguration {
     @Getter @Setter private String queueName;
     @Getter @Setter private String memcachedHost = "127.0.0.1";
     @Getter @Setter private int memcachedPort = 11211;
+    @Getter @Setter private String memcachedKey;
     @Getter @Setter private int maxRetries = 0;
     @Getter @Setter private String configDir;  // more RootyHandlers can be defined in this directory
 
     @Getter @Setter private Map<String, RootyHandlerConfiguration> handlers;
 
-    @Getter(lazy=true) private final MqClient  mqClient = initMqClient();
+    @Getter(lazy=true) private final MqClient mqClient = initMqClient();
 
     // force initialization of handlers, will start handlerWatcher
     public void initHandlers () { getHandlerMap(); }
@@ -73,18 +72,14 @@ public class RootyConfiguration {
                 .setQueueName(getQueueName());
     }
 
-    @Getter(value=AccessLevel.PROTECTED, lazy=true) private final MemcachedClient memcached = initMemcached();
-    private MemcachedClient initMemcached() {
-        try {
-            return new XMemcachedClient(getMemcachedHost(), getMemcachedPort());
-        } catch (IOException e) {
-            throw new IllegalStateException("Error connecting to memcached: "+e, e);
-        }
+    @Getter(value=AccessLevel.PROTECTED, lazy=true) private final MemcachedService memcached = initMemcached();
+    private MemcachedService initMemcached() {
+        return new MemcachedService(getMemcachedHost(), getMemcachedPort(), getSecret());
     }
 
     @Setter private RootyStatusManager statusManager;
     public RootyStatusManager getStatusManager() {
-        if (statusManager == null) statusManager = new RootyStatusManager(getMemcached(), getSecret());
+        if (statusManager == null) statusManager = new RootyStatusManager(getMemcached());
         return statusManager;
     }
 

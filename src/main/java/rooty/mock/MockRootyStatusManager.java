@@ -10,7 +10,7 @@ import static org.cobbzilla.util.string.StringUtil.empty;
 
 public class MockRootyStatusManager extends RootyStatusManager {
 
-    public MockRootyStatusManager() { super(null, null); }
+    public MockRootyStatusManager() { super(null); }
 
     private Map<String, RootyMessage> map = new HashMap<>();
 
