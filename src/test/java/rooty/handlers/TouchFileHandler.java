@@ -11,6 +11,8 @@ import rooty.RootyMessage;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.cobbzilla.util.io.FileUtil.abs;
+
 @Slf4j
 public class TouchFileHandler extends RootyHandlerBase {
 
@@ -41,7 +43,7 @@ public class TouchFileHandler extends RootyHandlerBase {
         FileUtil.touch(file);
 
         if (file.exists()) successCount.incrementAndGet();
-        log.info("process("+suffix+"): successfully touched file: "+file.getAbsolutePath());
+        log.info("process("+suffix+"): successfully touched file: "+abs(file));
         return true;
     }
 

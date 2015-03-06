@@ -9,6 +9,8 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.InputStream;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+
 public class RootySenderMain {
 
     @Getter private RootyOptions options = new RootyOptions();
@@ -30,7 +32,7 @@ public class RootySenderMain {
             @Cleanup final InputStream configStream = options.getConfigurationStream();
             configuration = yaml.loadAs(configStream, RootyConfiguration.class);
         } catch (Exception e) {
-            throw new IllegalStateException("Error loading configuration: " + e, e);
+            die("Error loading configuration: " + e, e); return;
         }
 
         final RootyMessage message = JsonUtil.fromJson(IOUtils.toString(in), RootyMessage.class);

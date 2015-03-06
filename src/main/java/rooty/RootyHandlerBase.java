@@ -14,6 +14,8 @@ import org.cobbzilla.util.security.ShaUtil;
 import org.cobbzilla.util.string.Base64;
 import org.cobbzilla.util.string.StringUtil;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+
 @Accessors(chain=true) @Slf4j
 public abstract class RootyHandlerBase implements RootyHandler {
 
@@ -42,13 +44,13 @@ public abstract class RootyHandlerBase implements RootyHandler {
         try {
             json = JsonUtil.FULL_MAPPER.writeValueAsString(message);
         } catch (Exception e) {
-            throw new IllegalStateException("Error translating message to JSON: "+e, e);
+            die("Error translating message to JSON: "+e, e); return;
         }
 
         try {
             getMqProducer().send(Base64.encodeBytes(CryptoUtil.encrypt(json.getBytes(StringUtil.UTF8cs), secret)));
         } catch (Exception e) {
-            throw new IllegalStateException("Error writing to message queue: "+e, e);
+            die("Error writing to message queue: "+e, e);
         }
     }
 

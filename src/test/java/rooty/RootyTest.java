@@ -17,6 +17,8 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.io.FileUtil.abs;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -39,7 +41,7 @@ public class RootyTest {
         main = new RootyMain();
         testDir = FileUtil.createTempDir("RootyTest");
 
-        if (!new File(testDir, CONFIG_DIR).mkdirs()) throw new IllegalStateException("Error creating config dir");
+        if (!new File(testDir, CONFIG_DIR).mkdirs()) die("Error creating config dir");
         configFile = File.createTempFile("rooty-config", ".yml", new File(testDir, CONFIG_DIR));
 
         // write config yml file -- substitute {{params}}
@@ -49,7 +51,7 @@ public class RootyTest {
                 .replace("{{SECRET}}", secret);
         FileUtil.toFile(configFile, configData);
 
-        final String[] args = { configFile.getAbsolutePath() };
+        final String[] args = { abs(configFile) };
         main.run(args);
         assertTrue(main.waitForStartup(10000));
 
@@ -68,7 +70,7 @@ public class RootyTest {
 
         // create a request
         final File targetFile = new File(System.getProperty("java.io.tmpdir"), RandomStringUtils.randomAlphanumeric(10));
-        final TouchMessage message = new TouchMessage(targetFile.getAbsolutePath());
+        final TouchMessage message = new TouchMessage(abs(targetFile));
 
         // write request to requests dir
         log.info("writing to MQ");
@@ -86,10 +88,10 @@ public class RootyTest {
     public void testSender () throws Exception {
 
         final File targetFile = new File(System.getProperty("java.io.tmpdir"), RandomStringUtils.randomAlphanumeric(10));
-        final TouchMessage message = new TouchMessage(targetFile.getAbsolutePath());
+        final TouchMessage message = new TouchMessage(abs(targetFile));
 
         final RootySenderMain sender = new RootySenderMain();
-        final String[] args = { configFile.getAbsolutePath() };
+        final String[] args = { abs(configFile) };
         final InputStream in = new ByteArrayInputStream(JsonUtil.toJson(message).getBytes());
         sender.send(args, in);
 
@@ -104,7 +106,7 @@ public class RootyTest {
             Thread.sleep(100);
         }
 
-        assertTrue("expected file to exist: " + targetFile.getAbsolutePath(), targetFile.exists());
+        assertTrue("expected file to exist: " + abs(targetFile), targetFile.exists());
         assertEquals(1, TouchFileHandler.getMessageCount());
         assertEquals(1, TouchFileHandler.getSuccessCount());
     }

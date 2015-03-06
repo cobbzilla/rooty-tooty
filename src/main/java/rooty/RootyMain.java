@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.json.JsonUtil.fromJson;
 import static org.cobbzilla.util.string.StringUtil.UTF8cs;
 
@@ -78,7 +79,7 @@ public class RootyMain implements MqConsumer {
             @Cleanup final InputStream configStream = options.getConfigurationStream();
             configuration = yaml.loadAs(configStream, RootyConfiguration.class);
         } catch (Exception e) {
-            throw new IllegalStateException("Error loading configuration: " + e, e);
+            die("Error loading configuration: " + e, e);
         }
 
         run();
@@ -107,7 +108,7 @@ public class RootyMain implements MqConsumer {
         if (shutdown.get()) {
             final String msg = "onMessage: shutting down, bailing on message: " + o;
             log.warn(msg);
-            throw new IllegalStateException(msg);
+            die(msg);
         }
 
         // decrypt/unmarshall the message

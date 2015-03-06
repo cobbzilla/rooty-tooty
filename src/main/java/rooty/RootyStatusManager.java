@@ -7,6 +7,7 @@ import org.cobbzilla.wizard.cache.memcached.MemcachedService;
 
 import java.util.concurrent.TimeUnit;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.json.JsonUtil.toJson;
 import static org.cobbzilla.util.string.StringUtil.empty;
 
@@ -26,7 +27,7 @@ public class RootyStatusManager {
                 memcached.set(statusKey(AUTHORITATIVE, message.getUuid()), toJson(message), (int) TimeUnit.MINUTES.toSeconds(5));
             }
         } catch (Exception e) {
-            throw new IllegalStateException("Error updating status: "+e);
+            die("Error updating status: "+e);
         }
     }
 
@@ -39,7 +40,7 @@ public class RootyStatusManager {
             return message == null ? null : JsonUtil.fromJson(message, RootyMessage.class);
 
         } catch (Exception e) {
-            throw new IllegalStateException("getStatus error: "+e, e);
+            return die("getStatus error: " + e, e);
         }
     }
 

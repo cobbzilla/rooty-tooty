@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.cobbzilla.util.io.FileUtil.abs;
 import static org.cobbzilla.util.io.FileUtil.path;
 
 /**
@@ -121,7 +122,7 @@ public class RootyConfiguration {
         if (configDir != null) {
             final File config = new File(configDir);
             if (!config.exists() || !config.isDirectory()) {
-                log.warn("initHandlerMap: Not a directory: " + config.getAbsolutePath());
+                log.warn("initHandlerMap: Not a directory: " + abs(config));
             } else {
                 final File[] files = FileUtil.list(config);
                 for (File f : files) {

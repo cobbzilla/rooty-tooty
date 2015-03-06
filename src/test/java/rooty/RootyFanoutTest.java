@@ -15,6 +15,7 @@ import rooty.handlers.TouchMessage;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import static org.cobbzilla.util.io.FileUtil.abs;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -40,8 +41,7 @@ public class RootyFanoutTest {
             final RootyMain main = new RootyMain();
             final String suffix = "_" + i;
 
-            final File configDir = new File(testDir, CONFIG_DIR + suffix);
-            if (!configDir.mkdirs()) throw new IllegalStateException("Error creating config dir");
+            final File configDir = FileUtil.mkdirOrDie(new File(testDir, CONFIG_DIR + suffix));
             final File configFile = File.createTempFile("rooty-config", ".yml", configDir);
 
             // write config yml file -- substitute {{BASE}} with testDir we just created
@@ -52,7 +52,7 @@ public class RootyFanoutTest {
                     .replace("{{SUFFIX}}", suffix);
             FileUtil.toFile(configFile, configData);
 
-            final String[] args = { configFile.getAbsolutePath() };
+            final String[] args = { abs(configFile) };
             main.run(args);
             consumers[i] = main;
             assertTrue(consumers[i].waitForStartup(10000));
@@ -74,7 +74,7 @@ public class RootyFanoutTest {
 
         // create a request
         @Cleanup("delete") final File targetFile = File.createTempFile("testFanout", ".test");
-        final TouchMessage message = new TouchMessage(targetFile.getAbsolutePath());
+        final TouchMessage message = new TouchMessage(abs(targetFile));
 
         // write request to requests dir
         log.info("writing to parent queue");
@@ -88,7 +88,7 @@ public class RootyFanoutTest {
         for (int i=0; i<NUM_CONSUMERS; i++) {
             final TouchFileHandler handler = consumers[i].getConfiguration().getHandler(TouchFileHandler.class);
 
-            final File touched = new File(targetFile.getAbsolutePath()+ handler.getFileSuffix());
+            final File touched = new File(abs(targetFile) + handler.getFileSuffix());
 
             // wait for file to be touched
             long start = System.currentTimeMillis();
@@ -96,7 +96,7 @@ public class RootyFanoutTest {
                 Thread.sleep(100);
             }
 
-            assertTrue("expected file to exist: " + touched.getAbsolutePath(), touched.exists());
+            assertTrue("expected file to exist: " + abs(touched), touched.exists());
         }
 
         assertEquals(NUM_CONSUMERS, TouchFileHandler.getMessageCount());
