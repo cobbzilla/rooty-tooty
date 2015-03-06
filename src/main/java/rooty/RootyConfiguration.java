@@ -123,13 +123,9 @@ public class RootyConfiguration {
             if (!config.exists() || !config.isDirectory()) {
                 log.warn("initHandlerMap: Not a directory: " + config.getAbsolutePath());
             } else {
-                final File[] files = config.listFiles();
-                if (files == null) {
-                    log.warn("initHandlerMap: Error listing config dir: " + config.getAbsolutePath());
-                } else {
-                    for (File f : files) {
-                        addHandlerFromFile(map, f);
-                    }
+                final File[] files = FileUtil.list(config);
+                for (File f : files) {
+                    addHandlerFromFile(map, f);
                 }
             }
 
