@@ -161,7 +161,7 @@ public class RootyConfiguration {
     }
 
     private void addHandler(Map<String, RootyHandler> map, String handlerName, String handlerClass, RootyHandlerConfiguration config) throws Exception {
-        final RootyHandler handler = (RootyHandler) Class.forName(handlerClass).newInstance();
+        final RootyHandler handler = ReflectionUtil.instantiate(handlerClass);
         if (config != null && config.getParams() != null) {
             ReflectionUtil.copyFromMap(handler, config.getParams());
         }
