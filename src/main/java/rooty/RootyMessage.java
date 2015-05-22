@@ -9,7 +9,7 @@ import lombok.experimental.Accessors;
 
 import java.util.UUID;
 
-import static org.cobbzilla.util.string.StringUtil.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class")
 @Accessors(chain=true) @ToString(of={"uuid", "errorCount", "lastError", "success", "finished", "results"})

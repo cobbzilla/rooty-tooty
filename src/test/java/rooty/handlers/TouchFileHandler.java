@@ -3,14 +3,15 @@ package rooty.handlers;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.util.io.FileUtil;
-import org.cobbzilla.util.string.StringUtil;
 import rooty.RootyHandlerBase;
 import rooty.RootyMessage;
 
 import java.io.File;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.io.FileUtil.abs;
 
 @Slf4j
@@ -29,7 +30,7 @@ public class TouchFileHandler extends RootyHandlerBase {
 
     @Getter @Setter private String suffix;
 
-    public String getFileSuffix() { return StringUtil.empty(suffix) ? "" :  "." + suffix; }
+    public String getFileSuffix() { return empty(suffix) ? "" :  "." + suffix; }
 
     @Override public boolean accepts(RootyMessage message) { return message instanceof TouchMessage; }
 

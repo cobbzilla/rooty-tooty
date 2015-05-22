@@ -1,12 +1,13 @@
 package rooty.mock;
 
+import org.cobbzilla.util.daemon.ZillaRuntime;
 import rooty.RootyMessage;
 import rooty.RootyStatusManager;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.cobbzilla.util.string.StringUtil.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 public class MockRootyStatusManager extends RootyStatusManager {
 

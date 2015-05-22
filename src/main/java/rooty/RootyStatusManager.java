@@ -2,14 +2,14 @@ package rooty;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.cache.memcached.MemcachedService;
 
 import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.json.JsonUtil.fromJson;
 import static org.cobbzilla.util.json.JsonUtil.toJson;
-import static org.cobbzilla.util.string.StringUtil.empty;
 
 @AllArgsConstructor @Slf4j
 public class RootyStatusManager {
@@ -37,7 +37,7 @@ public class RootyStatusManager {
         try {
             String message = memcached.get(statusKey(queueName, uuid));
             if (message == null && !empty(queueName)) message = memcached.get(statusKey(AUTHORITATIVE, uuid));
-            return message == null ? null : JsonUtil.fromJson(message, RootyMessage.class);
+            return message == null ? null : fromJson(message, RootyMessage.class);
 
         } catch (Exception e) {
             return die("getStatus error: " + e, e);
