@@ -134,7 +134,7 @@ public class RootyMain implements MqConsumer {
         boolean authoritative = false;
         try {
             // verify hash
-            if (!ShaUtil.sha256_hex(message.getSalt()+ secret).equals(message.getHash())) {
+            if (!ShaUtil.sha256_hex(message.getSalt() + secret).equals(message.getHash())) {
                 throw new IllegalArgumentException("Invalid hash for message: " + message.getUuid());
             }
 
