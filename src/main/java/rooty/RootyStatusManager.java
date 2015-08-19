@@ -18,7 +18,7 @@ public class RootyStatusManager {
 
     private MemcachedService memcached;
 
-    public static String statusKey(String queueName, String uuid) { return uuid +"_"+queueName; }
+    public static String statusKey(String queueName, String uuid) { return uuid+"_"+queueName; }
 
     public void update(String queueName, RootyMessage message, boolean authoritative) {
         try {

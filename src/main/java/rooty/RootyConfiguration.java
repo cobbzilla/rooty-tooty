@@ -33,7 +33,6 @@ public class RootyConfiguration {
     @Getter @Setter private String queueName;
     @Getter @Setter private String memcachedHost = "127.0.0.1";
     @Getter @Setter private int memcachedPort = 11211;
-    @Getter @Setter private String memcachedKey;
     @Getter @Setter private int maxRetries = 0;
     @Getter @Setter private String configDir;  // more RootyHandlers can be defined in this directory
 
