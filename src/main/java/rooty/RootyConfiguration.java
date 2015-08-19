@@ -170,6 +170,7 @@ public class RootyConfiguration {
     private void addHandler(Map<String, RootyHandler> map, String handlerName, RootyHandler handler) {
         handler.setMqClient(getMqClient());
         handler.setQueueName(getQueueName());
+        handler.setSender(getSender());
         handler.setStatusManager(getStatusManager());
         map.put(handlerName, handler);
     }

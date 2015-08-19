@@ -26,6 +26,7 @@ public abstract class RootyHandlerBase implements RootyHandler {
     private MqProducer initMqProducer() { return mqClient.getProducer(queueName); }
 
     @Getter @Setter private RootyStatusManager statusManager;
+    @Getter @Setter private RootySender sender;
 
     public void write (RootyMessage message, String secret) {
 
@@ -52,6 +53,12 @@ public abstract class RootyHandlerBase implements RootyHandler {
         } catch (Exception e) {
             die("Error writing to message queue: "+e, e);
         }
+    }
+
+    public RootyMessage request(RootyMessage message) { return request(message, RootyMain.DEFAULT_TIMEOUT); }
+
+    public RootyMessage request(RootyMessage message, long timeout) {
+        return RootyMain.request(message, getSender(), getStatusManager(), timeout);
     }
 
 }

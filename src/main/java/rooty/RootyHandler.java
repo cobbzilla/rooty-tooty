@@ -11,7 +11,10 @@ public interface RootyHandler {
     public RootyHandler setQueueName(String queueName);
 
     public RootyStatusManager getStatusManager();
-    public RootyHandler setStatusManager(RootyStatusManager updater);
+    public RootyHandler setStatusManager(RootyStatusManager statusManager);
+
+    public RootySender getSender();
+    public RootyHandler setSender(RootySender sender);
 
     /**
      * @param message A candidate message

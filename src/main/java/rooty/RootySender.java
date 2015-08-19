@@ -1,11 +1,13 @@
 package rooty;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 
-@Accessors(chain=true)
+@NoArgsConstructor @AllArgsConstructor @Accessors(chain=true)
 public class RootySender extends RootyHandlerBase {
 
     @Override public boolean accepts(RootyMessage message) { return false; }

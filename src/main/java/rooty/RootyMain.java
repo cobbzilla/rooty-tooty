@@ -15,11 +15,13 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.json.JsonUtil.fromJson;
 import static org.cobbzilla.util.string.StringUtil.UTF8cs;
+import static org.cobbzilla.util.system.Sleep.sleep;
 
 @Slf4j
 public class RootyMain implements MqConsumer {
@@ -27,6 +29,7 @@ public class RootyMain implements MqConsumer {
     @Getter private RootyOptions options = new RootyOptions();
 
     @Getter @Setter private RootyConfiguration configuration;
+
     protected MqClient getMqClient() { return configuration.getMqClient(); }
 
     private final AtomicBoolean listening = new AtomicBoolean(false);
@@ -159,4 +162,23 @@ public class RootyMain implements MqConsumer {
             statusManager.update(queueName, message.setFinished(true), authoritative);
         }
     }
+
+    public static long DEFAULT_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
+
+    public static RootyMessage request(RootyMessage message, RootySender sender, RootyStatusManager statusManager) {
+        return request(message, sender, statusManager, DEFAULT_TIMEOUT);
+    }
+
+    public static RootyMessage request(RootyMessage message, RootySender sender, RootyStatusManager statusManager, long timeout) {
+        sender.write(message);
+        sleep(250, "waiting for rooty to complete");
+        long start = System.currentTimeMillis();
+        while (System.currentTimeMillis() - start < timeout) {
+            final RootyMessage status = statusManager.getStatus(message.getUuid());
+            if (status != null && status.isFinished()) return status;
+            sleep(250, "waiting for rooty to complete");
+        }
+        return die("request timeout: " + message);
+    }
+
 }
